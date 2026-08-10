@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gallery</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --panel: #17171a;
+    --text-main: #f0efe9;
+    --text-dim: #8f8d86;
+    --accent: #c9a84c;
+    --gap: 14px;
+    --radius: 10px;
+    --font-display: 'Georgia', 'Times New Roman', serif;
+    --font-body: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    max-width: 1100px;
+    margin: 0 auto 40px;
+    text-align: left;
+    border-bottom: 1px solid #2a2a2e;
+    padding-bottom: 24px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 42px;
+    margin: 0 0 8px;
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    color: var(--text-dim);
+    font-size: 15px;
+    margin: 0;
+    max-width: 520px;
+    line-height: 1.5;
+  }
+
+  .gallery {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 190px;
+    gap: var(--gap);
+  }
+
+  .gallery figure {
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    cursor: zoom-in;
+    background: var(--panel);
+  }
+
+  .gallery figure.wide { grid-column: span 2; }
+  .gallery figure.tall { grid-row: span 2; }
+
+  .gallery img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), filter 0.5s ease;
+  }
+
+  .gallery figcaption {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 14px 16px 12px;
+    background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0));
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: #f4f3ef;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .gallery figure::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(201, 168, 76, 0);
+    border-radius: var(--radius);
+    transition: border-color 0.35s ease;
+    pointer-events: none;
+  }
+
+  .gallery figure:hover img {
+    transform: scale(1.06);
+    filter: brightness(0.85);
+  }
+
+  .gallery figure:hover figcaption {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .gallery figure:hover::after {
+    border-color: rgba(201, 168, 76, 0.6);
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 6, 7, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+  }
+
+  .lightbox.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .lightbox-content {
+    position: relative;
+    max-width: 88vw;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lightbox img {
+    max-width: 88vw;
+    max-height: 74vh;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .lightbox img.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .lightbox-caption {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    text-align: center;
+  }
+
+  .lightbox-caption strong {
+    color: var(--text-main);
+    font-weight: 500;
+  }
+
+  .lb-close, .lb-nav {
+    position: absolute;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: var(--text-main);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+
+  .lb-close:hover, .lb-nav:hover {
+    background: rgba(255,255,255,0.16);
+  }
+
+  .lb-close:active, .lb-nav:active {
+    transform: scale(0.92);
+  }
+
+  .lb-close {
+    top: -56px;
+    right: 0;
+  }
+
+  .lb-prev { left: -64px; top: 50%; transform: translateY(-50%); }
+  .lb-next { right: -64px; top: 50%; transform: translateY(-50%); }
+  .lb-prev:active, .lb-next:active { transform: translateY(-50%) scale(0.92); }
+
+  .lb-counter {
+    position: absolute;
+    top: -56px;
+    left: 0;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 860px) {
+    .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; }
+    .gallery figure.wide { grid-column: span 2; }
+    h1 { font-size: 30px; }
+  }
+
+  @media (max-width: 560px) {
+    .lb-prev { left: 6px; }
+    .lb-next { right: 6px; }
+    .lb-close { top: -48px; right: 0; }
+  }
+</style>
+
+
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Field Notes / 01</div>
+  <h1>Quiet Places To Travel</h1>
+  <p>A small collection of stills. 
+    <br>Click any frame to open it full-size — use the arrows or your keyboard to move through the set.</p>
+</header>
+
+<div class="gallery" id="gallery">
+  <!-- figures injected by JS -->
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-content">
+    <span class="lb-counter" id="lbCounter">01 / 08</span>
+    <button class="lb-close" id="lbClose" aria-label="Close">&#10005;</button>
+    <button class="lb-nav lb-prev" id="lbPrev" aria-label="Previous">&#8249;</button>
+    <img id="lbImage" src="" alt="" />
+    <button class="lb-nav lb-next" id="lbNext" aria-label="Next">&#8250;</button>
+    <div class="lightbox-caption" id="lbCaption"></div>
+  </div>
+</div>
+
+<script>
+  const photos = [
+    { src: 'https://picsum.photos/id/1015/900/700', title: 'River Bend', tag: 'Landscape', span: 'tall' },
+    { src: 'https://picsum.photos/id/1016/900/500', title: 'Ridge Line', tag: 'Landscape', span: 'wide' },
+    { src: 'https://picsum.photos/id/1018/700/900', title: 'Pine Hollow', tag: 'Forest', span: '' },
+    { src: 'https://picsum.photos/id/1021/700/900', title: 'Lakeside Dawn', tag: 'Water', span: '' },
+    { src: 'https://picsum.photos/id/1024/900/500', title: 'Open Road', tag: 'Travel', span: 'wide' },
+    { src: 'https://picsum.photos/id/1039/700/900', title: 'Coastal Drift', tag: 'Coast', span: 'tall' },
+    { src: 'https://picsum.photos/id/1043/700/900', title: 'Terraced Fields', tag: 'Farmland', span: '' },
+    { src: 'https://picsum.photos/id/1052/700/900', title: 'Stone Steps', tag: 'Architecture', span: '' }
+  ];
+
+  const galleryEl = document.getElementById('gallery');
+
+  photos.forEach((photo, i) => {
+    const figure = document.createElement('figure');
+    if (photo.span) figure.classList.add(photo.span);
+    figure.dataset.index = i;
+    figure.innerHTML = `
+      <img src="${photo.src}" alt="${photo.title}" loading="lazy" />
+      <figcaption><strong>${photo.title}</strong> &middot; ${photo.tag}</figcaption>
+    `;
+    figure.addEventListener('click', () => openLightbox(i));
+    galleryEl.appendChild(figure);
+  });
+
+  // Lightbox logic
+  const lightbox = document.getElementById('lightbox');
+  const lbImage = document.getElementById('lbImage');
+  const lbCaption = document.getElementById('lbCaption');
+  const lbCounter = document.getElementById('lbCounter');
+  const lbClose = document.getElementById('lbClose');
+  const lbPrev = document.getElementById('lbPrev');
+  const lbNext = document.getElementById('lbNext');
+
+  let currentIndex = 0;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function renderLightboxImage() {
+    const photo = photos[currentIndex];
+    lbImage.classList.remove('show');
+    // slight delay so the fade-in transition replays on each change
+    const nextSrc = photo.src.replace('/900/', '/1400/').replace('/700/', '/1100/');
+    const tempImg = new Image();
+    tempImg.onload = () => {
+      lbImage.src = tempImg.src;
+      requestAnimationFrame(() => lbImage.classList.add('show'));
+    };
+    tempImg.src = nextSrc;
+
+    lbCaption.innerHTML = `<strong>${photo.title}</strong> &middot; ${photo.tag}`;
+    lbCounter.textContent = `${pad(currentIndex + 1)} / ${pad(photos.length)}`;
+  }
+
+  function openLightbox(index) {
+    currentIndex = index;
+    renderLightboxImage();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function showNext() {
+    currentIndex = (currentIndex + 1) % photos.length;
+    renderLightboxImage();
+  }
+
+  function showPrev() {
+    currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+    renderLightboxImage();
+  }
+
+  lbClose.addEventListener('click', closeLightbox);
+  lbNext.addEventListener('click', showNext);
+  lbPrev.addEventListener('click', showPrev);
+
+  // Click outside image content closes lightbox
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') showNext();
+    if (e.key === 'ArrowLeft') showPrev();
+  });
+</script>
+
+</body>
+</html>
